@@ -4,20 +4,15 @@
 #define MAX_LEN 32 // max 32 characters for each command
 
 char commands[MAX_CMD][MAX_LEN]; // rolling array to store commands
-int last; // index of the last command
+int last;                        // index of the last command
 
 // compare two strings
-int comapre_string(char* str1, char* str2) {
-	while (str1 != '\0' && str2 != '\0') {
-		if (*str1++ != *str2++) {
-			return FALSE;
-		}
+int compare_string(char* str1, char* str2) {
+	while (*str1 != 0 && *str2 != 0 && *str1 == *str2) {
+		str1++;
+		str2++;
 	}
-	if (str1 == '\0' && str2 == '\0') {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
+	return *str1 == 0 && *str2 == 0;
 }
 
 void print_help(int window_id){
@@ -62,8 +57,13 @@ char* parse_command(int window_id) {
 }
 
 void execute_command(int window_id, char* cmd) {
-	wm_print(window_id, "get command: %s ", cmd);
-	wm_print(window_id, "last: %d\n", last);
+	//wm_print(window_id, "get command: %s ", cmd);
+	//wm_print(window_id, "last: %d ", last);
+	if (compare_string(cmd, "pong")) {
+		start_pong();
+	} else if (compare_string(cmd, "cls")) {
+		wm_clear(window_id);
+	}
 }
 
 // entry point of shell
