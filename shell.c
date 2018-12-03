@@ -3,8 +3,8 @@
 #define MAX_CMD 32 // max 32 commands
 #define MAX_LEN 32 // max 32 characters for each command
 
-char commands[MAX_CMD][MAX_LEN]; // rolling array to store commands
-int last;                        // index of the last command
+char commands[MAX_CMD][MAX_LEN]; // rolling array to save commands
+int number = 0;                  // total number of saved commands
 
 // compare two strings
 int compare_string(char* str1, char* str2) {
@@ -29,8 +29,9 @@ void print_help(int window_id){
 	wm_print(window_id, "!<number> -- Repeat command with the given index.\n");
 	wm_print(window_id, "about -- Print out author's information.\n");
 }
+
+// parse the command
 char* parse_command(int window_id) {
-	last = (last + 1) % MAX_CMD;
 	int index = 0;
 	char ch;
 	while ((ch = keyb_get_keystroke(window_id, TRUE)) != 0x0D) {
@@ -39,21 +40,21 @@ char* parse_command(int window_id) {
 			continue;
 		} else if (ch == 0x08) {
 			if (index > 0) {
-				commands[last][--index] = '\0';
+				commands[number][--index] = '\0';
 			}
 			wm_print(window_id, "\b");
 		} else {
 			wm_print(window_id, "%c", ch);
-			commands[last][index++] = ch;
+			commands[number][index++] = ch;
 		}
 	}
 	wm_print(window_id, "\n");
 
 	if (index == 0) {
-		last = (last - 1) % MAX_CMD;
 		return "";
 	} else {
-		return commands[last];
+		number = (number + 1) % MAX_CMD;
+		return commands[number - 1];
 	}
 }
 
@@ -66,18 +67,22 @@ void repeat_command(int window_id, char* cmd) {
 		cmd++;
 	}
 
-	// if the index is within bound, execute the command
 	// if the index is out of bound, prompt an error msg
-	if (index <= last) {
+	// if the index is within bound, execute the command
+	if (index >= number) {
+		wm_print(window_id, "Invalid index! Index of last command: %d\n", number - 1);
+	} else {
 		wm_print(window_id, "%s\n", commands[index]);
 		execute_command(window_id, commands[index]);
-	} else {
-		wm_print(window_id, "Invalid index!\n");
 	}
 }
 
 // execute the command
 void execute_command(int window_id, char* cmd) {
+	wm_print(window_id, "command %s ,", cmd);
+	wm_print(window_id, "last %d\n", number - 1);
+
+	// history, ps, echo
 	if (compare_string(cmd, "help")) {
 		print_help(window_id);
 	} else if (compare_string(cmd, "cls")) {
@@ -91,7 +96,7 @@ void execute_command(int window_id, char* cmd) {
 	} else if (cmd[0] == '!') {
 		repeat_command(window_id, cmd + 1);
 	} else if (cmd[0] != 0) {
-		wm_print(window_id, "%s Command not found!\n", cmd);
+		wm_print(window_id, "Command not found!\n");
 	}
 }
 
@@ -107,14 +112,19 @@ void print_about(int window_id) {
 	wm_print(window_id, "***************************************\n");
 }
 
-// entry point of shell
-void start_shell() {
+// shell process
+void shell_process() {
 	int window_id = wm_create(10, 3, 50, 17);
-	last = -1;
 	print_about(window_id);
 
 	while (1) {
 		char* cmd = parse_command(window_id);
 		execute_command(window_id, cmd);
 	}
+}
+
+// entry point of shell
+void start_shell() {
+	create_process(shell_process, 5, 0, "Shell Process");
+	resign();
 }
