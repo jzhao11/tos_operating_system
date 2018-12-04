@@ -66,19 +66,19 @@ void printsh_process_heading(int window_id) {
 // shell (sh) version of print_process_details()
 void printsh_process_details(int window_id, PROCESS p) {
 	static const char *state[] = {"READY          ",
-			"ZOMBIE         ", "SEND_BLOCKED   ",
-			"REPLY_BLOCKED  ", "RECEIVE_BLOCKED",
-			"MESSAGE_BLOCKED", "INTR_BLOCKED   "
+		"ZOMBIE         ", "SEND_BLOCKED   ",
+		"REPLY_BLOCKED  ", "RECEIVE_BLOCKED",
+		"MESSAGE_BLOCKED", "INTR_BLOCKED   "
 	};
 	if (!p->used) {
-		  wm_print(window_id, "PCB slot unused!\n");
-		  return;
+		wm_print(window_id, "PCB slot unused!\n");
+		return;
 	}
 	wm_print(window_id, state[p->state]);			// print state
 	if (p == active_proc) {
-		  wm_print(window_id, " *      ");			// print flag of active_proc
+		wm_print(window_id, " *      ");			// print flag of active_proc
 	} else {
-		  wm_print(window_id, "        ");
+		wm_print(window_id, "        ");
 	}
 	wm_print(window_id, "  %2d", p->priority);// print priority
 	wm_print(window_id, " %s\n", p->name);		// print name
@@ -90,16 +90,16 @@ void printsh_all_processes(int window_id) {
 	PCB *p = pcb;
 	printsh_process_heading(window_id);
 	for (i = 0; i < MAX_PROCS; i++, p++) {
-		  if (p->used) {
-				printsh_process_details(window_id, p);
-			}
+		if (p->used) {
+			printsh_process_details(window_id, p);
+		}
 	}
 }
 
 // print all commands
 void print_all_commands(int window_id, char commands[][MAX_LEN]) {
 	wm_print(window_id, "Index Command\n");
-  wm_print(window_id, "--------------------------------------\n");
+	wm_print(window_id, "--------------------------------------\n");
 
 	for (int i = 0; i < MAX_CMD; ++i) {
 		if (commands[i][0] == 0) {
