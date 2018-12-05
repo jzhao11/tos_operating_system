@@ -1,3 +1,8 @@
+/*************************
+*   Name: Jianfei Zhao   *
+*   ID: 918126149        *
+*************************/
+
 #include <kernel.h>
 
 #define MAX_CMD 32 // max 32 commands
