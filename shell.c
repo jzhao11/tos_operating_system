@@ -3,13 +3,14 @@
 #define MAX_CMD 32 // max 32 commands
 #define MAX_LEN 32 // max 32 characters for each command
 
-// compare two strings
+// compare the first token of two strings
+// separate the string by ' ' and '\0'
 int compare_string(char* str1, char* str2) {
-	while (*str1 != 0 && *str2 != 0 && *str1 == *str2) {
+	while (*str1 != 0 && *str1 != ' ' && *str2 != 0 && *str2 != ' ' && *str1 == *str2) {
 		str1++;
 		str2++;
 	}
-	return *str1 == 0 && *str2 == 0;
+	return (*str1 == 0 || *str1 == ' ') && (*str2 == 0 || *str2 == ' ');
 }
 
 // copy string from src to dest
@@ -60,7 +61,7 @@ void print_about(int window_id) {
 // shell (sh) version of print_process_heading()
 void printsh_process_heading(int window_id) {
 	wm_print(window_id, "State           Active Prio Name\n");
-  wm_print(window_id, "------------------------------------------------\n");
+	wm_print(window_id, "------------------------------------------------\n");
 }
 
 // shell (sh) version of print_process_details()
@@ -109,14 +110,23 @@ void print_all_commands(int window_id, char commands[][MAX_LEN]) {
 	}
 }
 
+// print echo
+void print_echo(int window_id, char* echo) {
+	if (*echo == ' ') {
+		while (*(++echo) != 0) {
+			wm_print(window_id, "%c", *echo);
+		}
+	}
+	wm_print(window_id, "\n");
+}
+
 // parse the command
 char* parse_command(int window_id, int* ptr_number, char commands[][MAX_LEN]) {
-	int index = 0;
 	char ch;
 	char* cmd = (char*) malloc(sizeof(char) * MAX_LEN);
 	char* tmp = cmd;
 	while ((ch = keyb_get_keystroke(window_id, TRUE)) != 0x0D) {
-		if (ch == ' ' || index >= MAX_LEN) {
+		if ((ch == ' ' && (tmp == cmd || *(tmp - 1) == ' ')) || (tmp - cmd >= MAX_LEN - 1)) {
 			wm_print(window_id, "%c", ch);
 			continue;
 		} else if (ch == 0x08) {
@@ -164,7 +174,6 @@ char* parse_command(int window_id, int* ptr_number, char commands[][MAX_LEN]) {
 
 // execute the command
 void execute_command(int window_id, char* cmd, char commands[][MAX_LEN]) {
-	// to do echo !!!
 	if (compare_string(cmd, "help")) {
 		print_help(window_id);
 	} else if (compare_string(cmd, "ps")) {
@@ -175,6 +184,8 @@ void execute_command(int window_id, char* cmd, char commands[][MAX_LEN]) {
 		print_about(window_id);
 	} else if (compare_string(cmd, "cls")) {
 		wm_clear(window_id);
+	} else if (compare_string(cmd, "echo")) {
+		print_echo(window_id, cmd + 4);
 	} else if (compare_string(cmd, "pong")) {
 		start_pong();
 	} else if (compare_string(cmd, "shell")) {
