@@ -4,8 +4,17 @@
 #define MAX_LEN 32 // max 32 characters for each command
 
 // compare the first token of two strings
-// separate the string by ' ' and '\0'
+// split each string by using delimiters (' ' and '\0')
 int compare_string(char* str1, char* str2) {
+	// trim whitespaces at the beginning
+	while (*str1 == ' ') {
+		str1++;
+	}
+	while (*str2 == ' ') {
+		str2++;
+	}
+
+	// compare
 	while (*str1 != 0 && *str1 != ' ' && *str2 != 0 && *str2 != ' ' && *str1 == *str2) {
 		str1++;
 		str2++;
@@ -13,7 +22,16 @@ int compare_string(char* str1, char* str2) {
 	return (*str1 == 0 || *str1 == ' ') && (*str2 == 0 || *str2 == ' ');
 }
 
-// copy string from src to dest
+// get substring (from start to end)
+// copy the substring to destination (dest)
+void get_substring(char* start, char* end, char* dest) {
+	while (*start != 0 && start != end) {
+		*dest++ = *start++;
+	}
+	*dest = 0;
+}
+
+// copy source string (src) to destination (dest)
 void copy_string(char* src, char* dest) {
 	while (*src != 0) {
 		*dest++ = *src++;
@@ -21,7 +39,7 @@ void copy_string(char* src, char* dest) {
 	*dest = 0;
 }
 
-// convert string into integer
+// convert string (str) into integer
 int str_to_int(char* str) {
 	int num = 0;
 	while (*str >= '0' && *str <= '9') {
@@ -46,7 +64,7 @@ void print_help(int window_id){
 	wm_print(window_id, "about -- Print out author's information.\n");
 }
 
-// print author's info
+// print author info
 void print_about(int window_id) {
 	wm_print(window_id, "***************************************\n");
 	wm_print(window_id, "*  Hello! This is TOS shell for fun!  *\n");
@@ -75,14 +93,14 @@ void printsh_process_details(int window_id, PROCESS p) {
 		wm_print(window_id, "PCB slot unused!\n");
 		return;
 	}
-	wm_print(window_id, state[p->state]);			// print state
+	wm_print(window_id, state[p->state]);      // print state
 	if (p == active_proc) {
-		wm_print(window_id, " *      ");			// print flag of active_proc
+		wm_print(window_id, " *      ");       // print flag of active_proc
 	} else {
 		wm_print(window_id, "        ");
 	}
-	wm_print(window_id, "  %2d", p->priority);// print priority
-	wm_print(window_id, " %s\n", p->name);		// print name
+	wm_print(window_id, "  %2d", p->priority); // print priority
+	wm_print(window_id, " %s\n", p->name);     // print name
 }
 
 // shell (sh) version of print_all_processes()
@@ -112,21 +130,23 @@ void print_all_commands(int window_id, char commands[][MAX_LEN]) {
 
 // print echo
 void print_echo(int window_id, char* echo) {
-	if (*echo == ' ') {
-		while (*(++echo) != 0) {
-			wm_print(window_id, "%c", *echo);
+	if (*echo++ == ' ') {
+		while (*echo != 0 && *echo != ';') {
+			wm_print(window_id, "%c", *echo++);
 		}
 	}
 	wm_print(window_id, "\n");
 }
 
-// parse the command
+// parse input as command
+// update the total number (*ptr_number) of commands
 char* parse_command(int window_id, int* ptr_number, char commands[][MAX_LEN]) {
 	char ch;
 	char* cmd = (char*) malloc(sizeof(char) * MAX_LEN);
 	char* tmp = cmd;
 	while ((ch = keyb_get_keystroke(window_id, TRUE)) != 0x0D) {
-		if ((ch == ' ' && (tmp == cmd || *(tmp - 1) == ' ')) || (tmp - cmd >= MAX_LEN - 1)) {
+		if ((ch == ' ' && (tmp == cmd || *(tmp - 1) == ' ' || *(tmp - 1) == ';'))
+			|| (tmp - cmd >= MAX_LEN - 1)) {
 			wm_print(window_id, "%c", ch);
 			continue;
 		} else if (ch == 0x08) {
@@ -142,10 +162,8 @@ char* parse_command(int window_id, int* ptr_number, char commands[][MAX_LEN]) {
 	wm_print(window_id, "\n");
 	*tmp = 0;
 
-	// /* print out cmd and number to verify */
-	// /* uncomment to verify if the command has been recorded */
-	//wm_print(window_id, "command: %s,", cmd);
-	//wm_print(window_id, "number: %d\n", *ptr_number);
+	//wm_print(window_id, "command: %s,", cmd);         // uncomment to verify command
+	//wm_print(window_id, "number: %d\n", *ptr_number); // uncomment to verify number
 
 	if (tmp == cmd) {
 		free(cmd);
@@ -172,34 +190,57 @@ char* parse_command(int window_id, int* ptr_number, char commands[][MAX_LEN]) {
 	}
 }
 
-// execute the command
+// execute command (cmd)
 void execute_command(int window_id, char* cmd, char commands[][MAX_LEN]) {
-	if (compare_string(cmd, "help")) {
-		print_help(window_id);
-	} else if (compare_string(cmd, "ps")) {
-		printsh_all_processes(window_id);
-	} else if (compare_string(cmd, "history")) {
-		print_all_commands(window_id, commands);
-	} else if (compare_string(cmd, "about")) {
-		print_about(window_id);
-	} else if (compare_string(cmd, "cls")) {
-		wm_clear(window_id);
-	} else if (compare_string(cmd, "echo")) {
-		print_echo(window_id, cmd + 4);
-	} else if (compare_string(cmd, "pong")) {
-		start_pong();
-	} else if (compare_string(cmd, "shell")) {
-		start_shell();
-	} else if (cmd[0] != 0) {
-		wm_print(window_id, "Command not found!\n");
+	char* token = (char*) malloc(sizeof(char) * MAX_LEN);
+	char* tmp = cmd;
+
+	// split command into tokens by using delimiters (';' and '\0')
+	while (1) {
+		if (*tmp == ';' || *tmp == 0) {
+			// get substring of command as token
+			get_substring(cmd, tmp, token);
+
+			// execute the token
+			if (compare_string(token, "help")) {
+				print_help(window_id);
+			} else if (compare_string(token, "ps")) {
+				printsh_all_processes(window_id);
+			} else if (compare_string(token, "history")) {
+				print_all_commands(window_id, commands);
+			} else if (compare_string(token, "about")) {
+				print_about(window_id);
+			} else if (compare_string(token, "cls")) {
+				wm_clear(window_id);
+			} else if (compare_string(token, "echo")) {
+				print_echo(window_id, cmd + 4);
+			} else if (compare_string(token, "pong")) {
+				start_pong();
+			} else if (compare_string(token, "shell")) {
+				start_shell();
+			} else if (token[0] != 0) {
+				wm_print(window_id, "Command not found!\n");
+			}
+
+			// if not the end, update the start of cmd
+			// if the end, terminate the loop
+			if (*tmp == 0) {
+				break;
+			} else {
+				cmd = tmp + 1;
+			}
+		}
+		tmp++;
 	}
+
+	free(token);
 }
 
 // shell process
 void shell_process() {
 	char commands[MAX_CMD][MAX_LEN]; // rolling array to save commands
 	int number = 0;                  // total number of saved commands
-	int window_id = wm_create(10, 3, 50, 17);
+	int window_id = wm_create(10, 2, 50, 20);
 	print_about(window_id);
 
 	while (1) {
