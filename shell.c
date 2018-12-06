@@ -3,10 +3,63 @@
 *   ID: 918126149        *
 *************************/
 
+/************** header file, macros, and function declarations **************/
 #include <kernel.h>
 
 #define MAX_CMD 32 // max 32 commands
 #define MAX_LEN 64 // max 63 chars in each command, '\0' reserved at the end
+
+// calculate the length of string
+int str_len(char* str);
+
+// compare the first token of two strings
+int compare_string(char* str1, char* str2);
+
+// get substring and copy to destination
+void get_substring(char* start, char* end, char* dest);  
+
+// copy source string to destination        
+void copy_string(char* src, char* dest);
+
+// convert string to int
+int str_to_int(char* str);
+
+// print help info
+void print_help(int window_id);
+
+// print author info
+void print_about(int window_id);
+
+// print process heading
+void printsh_process_heading(int window_id);
+
+// print process details
+void printsh_process_details(int window_id, PROCESS proc);
+
+// print all processes
+void printsh_all_processes(int window_id);
+
+// print all commands
+void print_all_commands(int window_id, char commands[][MAX_LEN]);
+
+// print echo
+void print_echo(int window_id, char* echo);
+
+// parse command
+char* parse_command(int window_id, int* ptr_number, char commands[][MAX_LEN]);
+
+// execute command
+void execute_command(int window_id, char* cmd, char commands[][MAX_LEN]);
+
+// entry point of shell process
+void shell_process();
+
+// start shell
+void start_shell();
+
+
+
+/****************************** implementation ******************************/
 
 // calculate the length of string (str)
 int str_len(char* str) {
@@ -64,7 +117,7 @@ int str_to_int(char* str) {
 }
 
 // print help info
-void print_help(int window_id){
+void print_help(int window_id) {
 	wm_print(window_id, "Need some help?\n");
 	wm_print(window_id, "Here you can find information that may be helpful.\n");
 	wm_print(window_id, "help -- Print out all the supported commands.\n");
@@ -97,34 +150,34 @@ void printsh_process_heading(int window_id) {
 }
 
 // shell (sh) version of print_process_details()
-void printsh_process_details(int window_id, PROCESS p) {
+void printsh_process_details(int window_id, PROCESS proc) {
 	static const char *state[] = {"READY          ",
 		"ZOMBIE         ", "SEND_BLOCKED   ",
 		"REPLY_BLOCKED  ", "RECEIVE_BLOCKED",
 		"MESSAGE_BLOCKED", "INTR_BLOCKED   "
 	};
-	if (!p->used) {
+	if (!proc->used) {
 		wm_print(window_id, "PCB slot unused!\n");
 		return;
 	}
-	wm_print(window_id, state[p->state]);      // print state
-	if (p == active_proc) {
-		wm_print(window_id, " *      ");       // print flag of active_proc
+	wm_print(window_id, state[proc->state]);      // print state
+	if (proc == active_proc) {
+		wm_print(window_id, " *      ");          // print flag of active_proc
 	} else {
 		wm_print(window_id, "        ");
 	}
-	wm_print(window_id, "  %2d", p->priority); // print priority
-	wm_print(window_id, " %s\n", p->name);     // print name
+	wm_print(window_id, "  %2d", proc->priority); // print priority
+	wm_print(window_id, " %s\n", proc->name);     // print name
 }
 
 // shell (sh) version of print_all_processes()
 void printsh_all_processes(int window_id) {
 	int i;
-	PCB *p = pcb;
+	PCB* proc = pcb;
 	printsh_process_heading(window_id);
-	for (i = 0; i < MAX_PROCS; i++, p++) {
-		if (p->used) {
-			printsh_process_details(window_id, p);
+	for (i = 0; i < MAX_PROCS; i++, proc++) {
+		if (proc->used) {
+			printsh_process_details(window_id, proc);
 		}
 	}
 }
