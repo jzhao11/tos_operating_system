@@ -6,7 +6,16 @@
 #include <kernel.h>
 
 #define MAX_CMD 32 // max 32 commands
-#define MAX_LEN 32 // max 32 characters for each command
+#define MAX_LEN 64 // max 63 chars in each command, '\0' reserved at the end
+
+// calculate the length of string (str)
+int str_len(char* str) {
+	int len = 0;
+	while (*str++ != 0) {
+		len++;
+	}
+	return len;
+}
 
 // compare the first token of two strings
 // split each string by using delimiters (' ' and '\0')
@@ -183,10 +192,34 @@ char* parse_command(int window_id, int* ptr_number, char commands[][MAX_LEN]) {
 			free(cmd);
 			return "";
 		} else {
-			wm_print(window_id, "%s\n", commands[index % MAX_CMD]);
-			copy_string(commands[index % MAX_CMD], commands[*ptr_number % MAX_CMD]);
-			free(cmd);
-			return commands[(*ptr_number)++ % MAX_CMD];
+			// consider corner cases (possibly remaining part after !<number>)
+			char* ptr1 = cmd + 1;
+			while (*ptr1 >= '0' && *ptr1 <= '9') {
+				ptr1++;
+			}
+			int remaining_len = str_len(ptr1);
+			int command_len = str_len(commands[index % MAX_CMD]);
+
+			// replace !<number> with the retrieved command
+			// if (command + remaining part) is out of bound, ignore it
+			// if (command + remaining part) is within bound, save it in history
+			if (command_len + remaining_len > MAX_LEN - 1) {
+				free(cmd);
+				return "";
+			} else {
+				char* buffer = (char*) malloc(sizeof(char) * MAX_LEN);
+				char* ptr2 = buffer;
+				copy_string(commands[index % MAX_CMD], buffer);
+				while (*ptr2 != 0) {
+					ptr2++;
+				}
+				copy_string(ptr1, ptr2);
+				wm_print(window_id, "%s\n", buffer);
+				copy_string(buffer, commands[*ptr_number % MAX_CMD]);
+				free(buffer);
+				free(cmd);
+				return commands[(*ptr_number)++ % MAX_CMD];
+			}
 		}
 	} else {
 		copy_string(cmd, commands[*ptr_number % MAX_CMD]);
