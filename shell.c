@@ -4,6 +4,7 @@
 *************************/
 
 /************** header file, macros, and function declarations **************/
+
 #include <kernel.h>
 
 #define MAX_CMD 32 // max 32 commands
