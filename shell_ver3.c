@@ -139,7 +139,7 @@ void print_about(int window_id) {
 	wm_print(window_id, "*  Author:  Jianfei (Christian) Zhao  *\n");
 	wm_print(window_id, "*  Contact: christianz0991@gmail.com  *\n");
 	wm_print(window_id, "*  Intro:   The author is seeking an  *\n");
-	wm_print(window_id, "*           internship position.      *\n");
+	wm_print(window_id, "*           summer internship.        *\n");
 	wm_print(window_id, "*  Hobby:   Non-Mickey-Mouse Courses  *\n");
 	wm_print(window_id, "***************************************\n");
 }
@@ -197,16 +197,10 @@ void print_all_commands(int window_id, char commands[][MAX_LEN]) {
 }
 
 // print echo
-// ignore redundant whitespaces in between
-void print_echo(int window_id, char* str) {
-	char* echo = str;
+void print_echo(int window_id, char* echo) {
 	if (*echo++ == ' ') {
 		while (*echo != 0 && *echo != ';') {
-			if (*echo == ' ' && *(echo - 1) == ' ') {
-				echo++;
-			} else {
-				wm_print(window_id, "%c", *echo++);
-			}
+			wm_print(window_id, "%c", *echo++);
 		}
 	}
 	wm_print(window_id, "\n");
@@ -219,7 +213,8 @@ char* parse_command(int window_id, int* ptr_number, char commands[][MAX_LEN]) {
 	char* cmd = (char*) malloc(sizeof(char) * MAX_LEN);
 	char* tmp = cmd;
 	while ((ch = keyb_get_keystroke(window_id, TRUE)) != 0x0D) {
-		if ((ch == ' ' && tmp == cmd) || (tmp - cmd >= MAX_LEN - 1)) {
+		if ((ch == ' ' && (tmp == cmd || *(tmp - 1) == ' ' || *(tmp - 1) == ';'))
+			|| (tmp - cmd >= MAX_LEN - 1)) {
 			wm_print(window_id, "%c", ch);
 			continue;
 		} else if (ch == 0x08) {
@@ -294,11 +289,6 @@ void execute_command(int window_id, char* cmd, char commands[][MAX_LEN]) {
 
 	// split command into tokens by using delimiters (';' and '\0')
 	while (1) {
-		// ignore the white spaces at the beginning of each command
-		while (*cmd == ' ') {
-			tmp = ++cmd;
-		}
-
 		if (*tmp == ';' || *tmp == 0) {
 			// get substring of command as token
 			get_substring(cmd, tmp, token);
