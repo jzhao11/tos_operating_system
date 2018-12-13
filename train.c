@@ -26,89 +26,97 @@ void comm_train(char* command, char* result, int input_len) {
    	com_msg.len_input_buffer = input_len;
    	com_msg.input_buffer = result;
 	send(com_port, &com_msg);
-	sleep(5);
 }
 
-void change_switch(int switch_id, char switch_fork) {
+void change_switch(char switch_id, char switch_fork) {
 	char command[5];
 	command[0] = 'M';
-	command[1] = switch_id + '0';
+	command[1] = switch_id;
 	command[2] = switch_fork;
 	command[3] = CMD_END;
 	command[4] = 0;
-	comm_train(command, "", 0);
+	comm_train(command, "\0", 0);
 }
 
 void clear_contact() {
-	comm_train("R\015", "", 0);
-}
-
-// convert an integer (up to 2 digits) into string
-// save the string into str
-void int_to_str(int integer, char* str) {
-	if (integer / 10) {
-		*str++ = integer / 10 + '0';
-	}
-	*str++ = integer % 10;
-	*str = 0;
+	comm_train("R\015", "\0", 0);
 }
 
 int retrieve_contact(char* contact_id) {
 	clear_contact();
-	char command[3];
+	char command[5];
 	command[0] = 'C';
-	char result[3];
 	char* tail = append_string(contact_id, command + 1);
-	*tail = CMD_END;
+	*tail++ = CMD_END;
+	*tail = 0;
+	char result[3];
 	comm_train(command, result, 3);
+	sleep(5);
 	return *result == '*' && *(result + 1) == '1';
 }
 
-void change_train_speed(int speed) {
+void change_train_speed(char speed) {
 	char command[7];
 	command[0] = 'L';
 	char* tail = append_string(TRAIN_ID, command + 1);
-	command[tail++ - command] = 'S';
-	command[tail++ - command] = speed + '0';
-	command[tail - command] = CMD_END;
-	comm_train(command, "", 0);
+	*tail++ = 'S';
+	*tail++ = speed;
+	*tail++ = CMD_END;
+	*tail = 0;
+	comm_train(command, "\0", 0);
 }
 
 void change_train_direction() {
 	char command[7];
 	command[0] = 'L';
 	char* tail = append_string(TRAIN_ID, command + 1);
-	command[tail++ - command] = 'D';
-	command[tail - command] = CMD_END;
-	comm_train(command, "", 0);
+	*tail++  = 'D';
+	*tail++ = CMD_END;
+	*tail = 0;
+	comm_train(command, "\0", 0);
+}
+
+void config1() {
+	
+}
+
+void config2() {
+
+}
+
+void config3() {
+
+}
+
+void config4() {
+
 }
 
 void train_process(PROCESS self, PARAM param) {
 	window_id = wm_create(10, 2, 50, 20);
-	if (retrieve_contact("4") || retrieve_contact("3") || retrieve_contact("6")) {
-		wm_print(window_id, "zamboni found\n");
+	change_switch('1', 'G');
+	change_switch('4', 'G');
+	change_switch('5', 'G');
+	change_switch('8', 'G');
+	change_switch('9', 'R');
+
+	for (int i = 0; i < 200; ++i) {
+		if (retrieve_contact("3") || retrieve_contact("7") || retrieve_contact("14")) {
+			wm_print(window_id, "zamboni found\n");
+			break;
+		}
 	}
-	change_switch(1, 'G');
-	change_switch(4, 'G');
-	change_switch(5, 'G');
-	change_switch(8, 'G');
-	change_switch(9, 'R');
-	
-	int contact2_status = retrieve_contact("2");
-	int contact5_status = retrieve_contact("5");
-	int contact8_status = retrieve_contact("8");
-	int contact11_status = retrieve_contact("11");
-	int contact12_status = retrieve_contact("12");
-	if (contact8_status && contact11_status) {
+
+	if (retrieve_contact("8") && retrieve_contact("11")) {
 		wm_print(window_id, "configuration 1\n");
-	} else if (contact2_status && contact12_status) {
+	} else if (retrieve_contact("2") && retrieve_contact("12")) {
 		wm_print(window_id, "configuration 2\n");
-	} else if (contact2_status && contact11_status) {
+	} else if (retrieve_contact("2") && retrieve_contact("11")) {
 		wm_print(window_id, "configuration 3\n");
-	} else if (contact5_status && contact12_status) {
+	} else if (retrieve_contact("5") && retrieve_contact("12")) {
 		wm_print(window_id, "configuration 4\n");
 	}
-	change_train_speed(4);
+	change_train_speed('4');
 	become_zombie();
 }
 
