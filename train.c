@@ -130,7 +130,6 @@ void handle_config1(int is_zamboni) {
 	while (!retrieve_contact("8")) {}
 	turn_around();
 	wm_print(window_id, "Back home.\n");
-	while (1) {}
 }
 
 void handle_config2(int is_zamboni) {
@@ -169,7 +168,6 @@ void handle_config2(int is_zamboni) {
 	change_switch('1', 'G');
 	turn_around();
 	wm_print(window_id, "Back home.\n");
-	while (1) {}
 }
 
 void handle_config3(int is_zamboni) {
@@ -207,7 +205,6 @@ void handle_config3(int is_zamboni) {
 	while (!retrieve_contact("2")) {}
 	turn_around();
 	wm_print(window_id, "Back home.\n");
-	while (1) {}
 }
 
 void handle_config4(int is_zamboni) {
