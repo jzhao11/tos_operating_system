@@ -9,10 +9,10 @@
 // run the train application
 // **************************
 
-#define CMD_END '\015'
-#define TRAIN_ID "20"
+#define CMD_END '\015' // ending of train command
+#define TRAIN_ID "20"  // only one train id
 
-int window_id;
+int window_id;         // window for train application
 
 // append src to the tail of dest
 // return the dest tail (after appending) for further operations
@@ -234,10 +234,10 @@ void handle_config4(int is_zamboni) {
 
 	// train 6->5 (back home)
 	change_switch('4', 'R');
-	change_train_speed('5');
+	change_train_speed('4');
 	while (!retrieve_contact("5")) {}
-	turn_around();
 	change_switch('4', 'G');
+	turn_around();
 	wm_print(window_id, "Back home.\n");
 }
 
