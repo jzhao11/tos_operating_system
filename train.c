@@ -1,4 +1,7 @@
-
+/*************************
+*   Name: Jianfei Zhao   *
+*   ID: 918126149        *
+*************************/
 #include <kernel.h>
 
 
@@ -208,7 +211,34 @@ void handle_config3(int is_zamboni) {
 }
 
 void handle_config4(int is_zamboni) {
-	change_train_speed('4');
+	// train 5->6->7->9->12 (wagon picked up)
+	change_train_speed('5');
+	change_switch('5', 'R');
+	change_switch('6', 'G');
+	change_switch('2', 'G');
+	change_switch('3', 'R');
+	change_switch('1', 'R');
+	while (retrieve_contact("12")) {}
+	sleep(15);
+	turn_around();
+
+	// if with zamboni, wait until zamboni 6->4, then start
+	if (is_zamboni) {
+		while (!retrieve_contact("4")) {}
+	}
+
+	// train 1->2->6
+	change_train_speed('5');
+	while (!retrieve_contact("6")) {}
+	turn_around();
+
+	// train 6->5 (back home)
+	change_switch('4', 'R');
+	change_train_speed('5');
+	while (!retrieve_contact("5")) {}
+	turn_around();
+	change_switch('4', 'G');
+	wm_print(window_id, "Back home.\n");
 }
 
 void handle_config(int is_zamboni) {
