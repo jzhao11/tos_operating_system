@@ -170,7 +170,41 @@ void handle_config2(int is_zamboni) {
 }
 
 void handle_config3(int is_zamboni) {
+	// if with zamboni, wait until zamboni 15->3, then start
+	if (is_zamboni) {
+		while (!retrieve_contact("3")) {}
+	}
+
+	turn_around();
 	change_train_speed('4');
+	while (!retrieve_contact("1")) {}
+	change_switch('2', 'R');
+	change_switch('8', 'R');
+	while (retrieve_contact("1")) {}
+	sleep(25);
+	turn_around();
+
+	// train 12->11
+	change_train_speed('4');
+	while (!retrieve_contact("12")) {}
+	change_switch('7', 'R');
+	while (retrieve_contact("11")) {}
+	turn_around();
+
+	// train 11->12
+	change_train_speed('4');
+	while (!retrieve_contact("12")) {}
+	change_switch('2', 'G');
+	while (retrieve_contact("12")) {}
+	sleep(25);
+	turn_around();
+
+	// train 1->2 (back home)
+	change_train_speed('4');
+	while (!retrieve_contact("2")) {}
+	turn_around();
+	wm_print(window_id, "Back home.\n");
+	while (1) {}
 }
 
 void handle_config4(int is_zamboni) {
