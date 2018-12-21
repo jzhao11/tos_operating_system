@@ -2,17 +2,67 @@
 *   Name: Jianfei Zhao   *
 *   ID: 918126149        *
 *************************/
+
+/************** header file, macros, and function declarations **************/
+
 #include <kernel.h>
-
-
-// **************************
-// run the train application
-// **************************
 
 #define CMD_END '\015' // ending of train command
 #define TRAIN_ID "20"  // only one train id
 
 int window_id;         // window for train application
+
+// append src to the tail of dest
+char* append_string(char* src, char* dest);
+
+// communicate with the train
+void comm_train(char* command, char* result, int input_len);
+
+// clear the s88 memory buffer
+void clear_contact();
+
+// retrieve the status of specified contact
+int retrieve_contact(char* contact_id);
+
+// change the switch into specified fork
+void change_switch(char switch_id, char switch_fork);
+
+// change the speed of train
+void change_train_speed(char speed);
+
+// change the direction of train
+void change_train_direction();
+
+// turn around the train
+void turn_around();
+
+// handle configuration 1
+void handle_config1(int is_zamboni);
+
+// handle configuration 2
+void handle_config2(int is_zamboni);
+
+// handle configuration 3
+void handle_config3(int is_zamboni);
+
+// handle configuration 4
+void handle_config4(int is_zamboni);
+
+// detect and handle configuration
+void handle_config(int is_zamboni);
+
+// detect zamboni
+int detect_zamboni();
+
+// train process
+void train_process(PROCESS self, PARAM param);
+
+// initialize train application
+void init_train();
+
+
+
+/****************************** implementation ******************************/
 
 // append src to the tail of dest
 // return the dest tail (after appending) for further operations
@@ -23,6 +73,8 @@ char* append_string(char* src, char* dest) {
 	return dest;
 }
 
+// communicate with the train
+// send a message to com_port
 void comm_train(char* command, char* result, int input_len) {
 	COM_Message com_msg;
 	com_msg.output_buffer = command;
@@ -31,20 +83,14 @@ void comm_train(char* command, char* result, int input_len) {
 	send(com_port, &com_msg);
 }
 
-void change_switch(char switch_id, char switch_fork) {
-	char command[5];
-	command[0] = 'M';
-	command[1] = switch_id;
-	command[2] = switch_fork;
-	command[3] = CMD_END;
-	command[4] = 0;
-	comm_train(command, "\0", 0);
-}
-
+// clear the s88 memory buffer
+// execute the command R{CR}
 void clear_contact() {
 	comm_train("R\015", "\0", 0);
 }
 
+// retrieve the status of specified contact (contact_id)
+// execute the command C#{CR}
 int retrieve_contact(char* contact_id) {
 	clear_contact();
 	char command[5];
@@ -58,6 +104,20 @@ int retrieve_contact(char* contact_id) {
 	return *result == '*' && *(result + 1) == '1';
 }
 
+// change the switch (switch_id) into specified fork (switch_fork, R or G)
+// execute the command M#x{CR}
+void change_switch(char switch_id, char switch_fork) {
+	char command[5];
+	command[0] = 'M';
+	command[1] = switch_id;
+	command[2] = switch_fork;
+	command[3] = CMD_END;
+	command[4] = 0;
+	comm_train(command, "\0", 0);
+}
+
+// change the speed of train (0 to 5)
+// execute the command L#S#{CR}
 void change_train_speed(char speed) {
 	char command[7];
 	command[0] = 'L';
@@ -69,6 +129,8 @@ void change_train_speed(char speed) {
 	comm_train(command, "\0", 0);
 }
 
+// change the direction of train
+// execute the command L#D{CR}
 void change_train_direction() {
 	char command[7];
 	command[0] = 'L';
@@ -79,26 +141,33 @@ void change_train_direction() {
 	comm_train(command, "\0", 0);
 }
 
+// turn around the train
+// stop and then change direction
 void turn_around() {
 	change_train_speed('0');
 	change_train_direction();
 }
 
+// handle configuration 1
+// if with zamboni, is_zamboni is 1
 void handle_config1(int is_zamboni) {
 	// train 8->9->12
 	change_train_speed('4');
+	change_switch('5', 'R');
 	while (retrieve_contact("8")) {}
-	sleep(15);
+	sleep(25);
 	turn_around();
 	change_switch('6', 'G');
 	change_switch('7', 'G');
 	change_train_speed('4');
 	while (!retrieve_contact("12")) {}
 	sleep(15);
+	change_switch('5', 'G');
 	change_switch('7', 'R');
 	turn_around();
 
 	// train 12->11 (wagon picked up)
+	// if with zamboni, wait until zamboni 13->10, then move train
 	if (is_zamboni) {
 		while (!retrieve_contact("10")) {}
 	}
@@ -116,6 +185,7 @@ void handle_config1(int is_zamboni) {
 	turn_around();
 
 	// train 12->9->7
+	// if with zamboni, wait until zamboni 7->6, then move train
 	if (is_zamboni) {
 		while (!retrieve_contact("6")) {}
 	}
@@ -132,8 +202,10 @@ void handle_config1(int is_zamboni) {
 	wm_print(window_id, "Back home.\n");
 }
 
+// handle configuration 2
+// if with zamboni, is_zamboni is 1
 void handle_config2(int is_zamboni) {
-	// if with zamboni, wait until zamboni 15->3, then start
+	// if with zamboni, wait until zamboni 15->3, then move train
 	if (is_zamboni) {
 		while (!retrieve_contact("3")) {}
 	}
@@ -152,7 +224,7 @@ void handle_config2(int is_zamboni) {
 	while (!retrieve_contact("1")) {}
 	change_switch('1', 'G');
 	while (retrieve_contact("1")) {}
-	sleep(15);
+	sleep(25);
 	turn_around();
 
 	// train 2->1->15
@@ -170,12 +242,15 @@ void handle_config2(int is_zamboni) {
 	wm_print(window_id, "Back home.\n");
 }
 
+// handle configuration 3
+// if with zamboni, is_zamboni is 1
 void handle_config3(int is_zamboni) {
-	// if with zamboni, wait until zamboni 15->3, then start
+	// if with zamboni, wait until zamboni 15->3, then move train
 	if (is_zamboni) {
 		while (!retrieve_contact("3")) {}
 	}
 
+	// train 2->1->12
 	turn_around();
 	change_train_speed('4');
 	while (!retrieve_contact("1")) {}
@@ -207,6 +282,8 @@ void handle_config3(int is_zamboni) {
 	wm_print(window_id, "Back home.\n");
 }
 
+// handle configuration 4
+// if with zamboni, is_zamboni is 1
 void handle_config4(int is_zamboni) {
 	// train 5->6->7->9->12 (wagon picked up)
 	change_train_speed('5');
@@ -216,10 +293,10 @@ void handle_config4(int is_zamboni) {
 	change_switch('3', 'R');
 	change_switch('1', 'R');
 	while (retrieve_contact("12")) {}
-	sleep(15);
+	sleep(25);
 	turn_around();
 
-	// if with zamboni, wait until zamboni 6->4, then start
+	// if with zamboni, wait until zamboni 6->4, then move train
 	if (is_zamboni) {
 		while (!retrieve_contact("4")) {}
 	}
@@ -238,24 +315,29 @@ void handle_config4(int is_zamboni) {
 	wm_print(window_id, "Back home.\n");
 }
 
+// detect and handle configuration
+// after detection, call corresponding handler handle_config#()
 void handle_config(int is_zamboni) {
+	char* keyword = is_zamboni ? "with" : "without";
 	if (retrieve_contact("8") && retrieve_contact("11")) {
-		wm_print(window_id, "Configuration 1.\n");
+		wm_print(window_id, "Configuration 1 %s zamboni.\n", keyword);
 		handle_config1(is_zamboni);
 	} else if (retrieve_contact("2") && retrieve_contact("12")) {
-		wm_print(window_id, "Configuration 2.\n");
+		wm_print(window_id, "Configuration 2 %s zamboni.\n", keyword);
 		handle_config2(is_zamboni);
 	} else if (retrieve_contact("2") && retrieve_contact("11")) {
-		wm_print(window_id, "Configuration 3.\n");
+		wm_print(window_id, "Configuration 3 %s zamboni.\n", keyword);
 		handle_config3(is_zamboni);
 	} else if (retrieve_contact("5") && retrieve_contact("12")) {
-		wm_print(window_id, "Configuration 4.\n");
+		wm_print(window_id, "Configuration 4 %s zamboni.\n", keyword);
 		handle_config4(is_zamboni);
 	}
 }
 
+// detect zamboni
 int detect_zamboni() {
-	for (int i = 0; i < 25; ++i) {
+	wm_print(window_id, "Looking for zamboni (Probing 30 times).\n");
+	for (int i = 0; i < 30; ++i) {
 		if (retrieve_contact("7")) {
 			wm_print(window_id, "Zamboni found.\n");
 			return 1;
@@ -264,6 +346,7 @@ int detect_zamboni() {
 	return 0;
 }
 
+// train process
 void train_process(PROCESS self, PARAM param) {
 	window_id = wm_create(10, 2, 50, 20);
 	change_switch('1', 'G');
@@ -276,6 +359,7 @@ void train_process(PROCESS self, PARAM param) {
 	become_zombie();
 }
 
+// initialize train application
 void init_train() {
 	create_process(train_process, 5, 0, "Train Process");
 	resign();
