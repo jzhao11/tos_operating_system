@@ -206,12 +206,11 @@ void handle_config1(int is_zamboni) {
 // handle configuration 2
 // if with zamboni, is_zamboni is 1
 void handle_config2(int is_zamboni) {
+	// train 12->15
 	// if with zamboni, wait until zamboni 15->3, then move train
 	if (is_zamboni) {
 		while (!retrieve_contact("3")) {}
 	}
-
-	// train 12->15
 	change_switch('2', 'R');
 	change_switch('1', 'R');
 	change_train_speed('5');
@@ -253,38 +252,49 @@ void handle_config2(int is_zamboni) {
 // handle configuration 3
 // if with zamboni, is_zamboni is 1
 void handle_config3(int is_zamboni) {
+	// train 2->1->12
 	// if with zamboni, wait until zamboni 15->3, then move train
 	if (is_zamboni) {
 		while (!retrieve_contact("3")) {}
 	}
-
-	// train 2->1->12
 	turn_around();
-	change_train_speed('4');
-	while (!retrieve_contact("1")) {}
+	change_train_speed('5');
+	while (retrieve_contact("2")) {}
+	while (retrieve_contact("1")) {}
 	change_switch('2', 'R');
 	change_switch('8', 'R');
-	while (retrieve_contact("1")) {}
-	sleep(25);
+	change_switch('1', 'R');
+	change_switch('7', 'R');
 	turn_around();
 
-	// train 12->11
+	// train 12->11->13 (wagon picked up)
+	// if with zamboni, wait until zamboni 7->10, then move train
+	if (is_zamboni) {
+		while (!retrieve_contact("10")) {}
+	}
 	change_train_speed('4');
-	while (!retrieve_contact("12")) {}
-	change_switch('7', 'R');
+	sleep(25);
+	while (retrieve_contact("15")) {}
+	sleep(25);
+	change_switch('1', 'G');
 	while (retrieve_contact("11")) {}
 	turn_around();
 
-	// train 11->12
-	change_train_speed('4');
-	while (!retrieve_contact("12")) {}
-	change_switch('2', 'G');
+	// train 13->11->12->15
+	change_train_speed('5');
+	while (retrieve_contact("13")) {}
+	while (retrieve_contact("11")) {}
 	while (retrieve_contact("12")) {}
-	sleep(25);
+	change_switch('2', 'G');
+	change_switch('1', 'R');
 	turn_around();
 
-	// train 1->2 (back home)
+	// train 15->1->2 (back home)
 	change_train_speed('4');
+	sleep(25);
+	while (retrieve_contact("15")) {}
+	sleep(25);
+	change_switch('1', 'G');
 	while (!retrieve_contact("2")) {}
 	turn_around();
 	wm_print(window_id, "Back home.\n");
