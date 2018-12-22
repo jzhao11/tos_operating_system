@@ -161,7 +161,6 @@ void handle_config1(int is_zamboni) {
 	change_switch('7', 'G');
 	change_train_speed('4');
 	while (!retrieve_contact("12")) {}
-	sleep(15);
 	change_switch('5', 'G');
 	change_switch('7', 'R');
 	turn_around();
@@ -180,19 +179,21 @@ void handle_config1(int is_zamboni) {
 	change_train_speed('4');
 	change_switch('7', 'G');
 	while (!retrieve_contact("12")) {}
-	sleep(15);
 	change_switch('8', 'G');
+	sleep(15);
 	turn_around();
 
 	// train 12->9->7
-	// if with zamboni, wait until zamboni 7->6, then move train
+	// if with zamboni, wait until zamboni 10->7, then move train
 	if (is_zamboni) {
-		while (!retrieve_contact("6")) {}
+		while (!retrieve_contact("7")) {}
 	}
+	change_train_speed('5');
 	change_switch('5', 'R');
 	change_switch('6', 'R');
-	change_train_speed('4');
-	while (!retrieve_contact("7")) {}
+	while (retrieve_contact("12")) {}
+	while (retrieve_contact("9")) {}
+	sleep(25);
 	turn_around();
 
 	// train 7->8 (back home)
@@ -213,8 +214,9 @@ void handle_config2(int is_zamboni) {
 	// train 12->15
 	change_switch('2', 'R');
 	change_switch('1', 'R');
-	change_train_speed('3');
-	while (!retrieve_contact("15")) {}
+	change_train_speed('5');
+	while (retrieve_contact("12")) {}
+	sleep(25);
 	turn_around();
 	change_switch('2', 'G');
 	change_switch('3', 'G');
@@ -228,8 +230,14 @@ void handle_config2(int is_zamboni) {
 	turn_around();
 
 	// train 2->1->15
-	change_train_speed('4');
-	while (!retrieve_contact("15")) {}
+	// if with zamboni, wait until zamboni 15->3, then move train
+	if (is_zamboni) {
+		while (!retrieve_contact("3")) {}
+	}
+	change_train_speed('5');
+	while (retrieve_contact("2")) {}
+	while (retrieve_contact("1")) {}
+	sleep(25);
 	turn_around();
 	change_switch('1', 'R');
 	change_switch('2', 'R');
@@ -285,7 +293,8 @@ void handle_config3(int is_zamboni) {
 // handle configuration 4
 // if with zamboni, is_zamboni is 1
 void handle_config4(int is_zamboni) {
-	// train 5->6->7->9->12 (wagon picked up)
+	// train 5->6->7->9->12->15 (wagon picked up)
+	while (retrieve_contact("6")) {}
 	change_train_speed('5');
 	change_switch('5', 'R');
 	change_switch('6', 'G');
@@ -293,17 +302,19 @@ void handle_config4(int is_zamboni) {
 	change_switch('3', 'R');
 	change_switch('1', 'R');
 	while (retrieve_contact("12")) {}
-	sleep(25);
+	sleep(15);
 	turn_around();
 
+	// train 15->1->2->6
 	// if with zamboni, wait until zamboni 7->6, then move train
 	if (is_zamboni) {
 		while (!retrieve_contact("6")) {}
 	}
-
-	// train 1->2->6
 	change_train_speed('5');
-	while (!retrieve_contact("2")) {}
+	sleep(15);
+	while (retrieve_contact("15")) {}
+	while (retrieve_contact("1")) {}
+	while (retrieve_contact("2")) {}
 	change_train_speed('4');
 	while (!retrieve_contact("6")) {}
 	turn_around();
