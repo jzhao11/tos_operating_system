@@ -296,13 +296,15 @@ void handle_config4(int is_zamboni) {
 	sleep(25);
 	turn_around();
 
-	// if with zamboni, wait until zamboni 6->4, then move train
+	// if with zamboni, wait until zamboni 7->6, then move train
 	if (is_zamboni) {
-		while (!retrieve_contact("4")) {}
+		while (!retrieve_contact("6")) {}
 	}
 
 	// train 1->2->6
 	change_train_speed('5');
+	while (!retrieve_contact("2")) {}
+	change_train_speed('4');
 	while (!retrieve_contact("6")) {}
 	turn_around();
 
