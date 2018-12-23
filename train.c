@@ -152,6 +152,7 @@ void turn_around() {
 // if with zamboni, is_zamboni is 1
 void handle_config1(int is_zamboni) {
 	// train 8->9->12
+	wm_print(window_id, "Train 8->9->12.\n");
 	change_train_speed('4');
 	change_switch('5', 'R');
 	while (retrieve_contact("8")) {}
@@ -168,14 +169,17 @@ void handle_config1(int is_zamboni) {
 	// train 12->11 (wagon picked up)
 	// if with zamboni, wait until zamboni 13->10, then move train
 	if (is_zamboni) {
+		wm_print(window_id, "Waiting until zamboni 13->10.\n");
 		while (!retrieve_contact("10")) {}
 	}
+	wm_print(window_id, "Train 12->11.\n");
 	change_switch('8', 'R');
 	change_train_speed('4');
 	while (retrieve_contact("11")) {}
 	turn_around();
 
 	// train 11->12
+	wm_print(window_id, "Train 11->12.\n");
 	change_train_speed('4');
 	change_switch('7', 'G');
 	while (!retrieve_contact("12")) {}
@@ -186,8 +190,10 @@ void handle_config1(int is_zamboni) {
 	// train 12->9->7
 	// if with zamboni, wait until zamboni 10->7, then move train
 	if (is_zamboni) {
+		wm_print(window_id, "Waiting until zamboni 10->7.\n");
 		while (!retrieve_contact("7")) {}
 	}
+	wm_print(window_id, "Train 12->9->7.\n");
 	change_train_speed('5');
 	change_switch('5', 'R');
 	change_switch('6', 'R');
@@ -197,6 +203,7 @@ void handle_config1(int is_zamboni) {
 	turn_around();
 
 	// train 7->8 (back home)
+	wm_print(window_id, "Train 7->8.\n");
 	change_train_speed('4');
 	while (!retrieve_contact("8")) {}
 	turn_around();
@@ -209,8 +216,10 @@ void handle_config2(int is_zamboni) {
 	// train 12->15
 	// if with zamboni, wait until zamboni 15->3, then move train
 	if (is_zamboni) {
+		wm_print(window_id, "Waiting until zamboni 15->3.\n");
 		while (!retrieve_contact("3")) {}
 	}
+	wm_print(window_id, "Train 12->15.\n");
 	change_switch('2', 'R');
 	change_switch('1', 'R');
 	change_train_speed('5');
@@ -221,6 +230,7 @@ void handle_config2(int is_zamboni) {
 	change_switch('3', 'G');
 
 	// train 15->1->2 (wagon picked up)
+	wm_print(window_id, "Train 15->1->2.\n");
 	change_train_speed('4');
 	while (!retrieve_contact("1")) {}
 	change_switch('1', 'G');
@@ -231,8 +241,10 @@ void handle_config2(int is_zamboni) {
 	// train 2->1->15
 	// if with zamboni, wait until zamboni 15->3, then move train
 	if (is_zamboni) {
+		wm_print(window_id, "Waiting until zamboni 15->3.\n");
 		while (!retrieve_contact("3")) {}
 	}
+	wm_print(window_id, "Train 2->1->15.\n");
 	change_train_speed('5');
 	while (retrieve_contact("2")) {}
 	while (retrieve_contact("1")) {}
@@ -242,6 +254,7 @@ void handle_config2(int is_zamboni) {
 	change_switch('2', 'R');
 
 	// train 15->12 (back home)
+	wm_print(window_id, "Train 15->12.\n");
 	change_train_speed('4');
 	while (!retrieve_contact("12")) {}
 	change_switch('1', 'G');
@@ -252,11 +265,13 @@ void handle_config2(int is_zamboni) {
 // handle configuration 3
 // if with zamboni, is_zamboni is 1
 void handle_config3(int is_zamboni) {
-	// train 2->1->12
+	// train 2->1->15
 	// if with zamboni, wait until zamboni 15->3, then move train
 	if (is_zamboni) {
+		wm_print(window_id, "Waiting until zamboni 15->3.\n");
 		while (!retrieve_contact("3")) {}
 	}
+	wm_print(window_id, "Train 2->1->15.\n");
 	turn_around();
 	change_train_speed('5');
 	while (retrieve_contact("2")) {}
@@ -267,11 +282,13 @@ void handle_config3(int is_zamboni) {
 	change_switch('7', 'R');
 	turn_around();
 
-	// train 12->11->13 (wagon picked up)
+	// train 15->12->11->13 (wagon picked up)
 	// if with zamboni, wait until zamboni 7->10, then move train
 	if (is_zamboni) {
+		wm_print(window_id, "Waiting until zamboni 7->10.\n");
 		while (!retrieve_contact("10")) {}
 	}
+	wm_print(window_id, "Train 15->12->11->13.\n");
 	change_train_speed('4');
 	sleep(25);
 	while (retrieve_contact("15")) {}
@@ -281,6 +298,7 @@ void handle_config3(int is_zamboni) {
 	turn_around();
 
 	// train 13->11->12->15
+	wm_print(window_id, "Train 13->11->12->15.\n");
 	change_train_speed('5');
 	while (retrieve_contact("13")) {}
 	while (retrieve_contact("11")) {}
@@ -290,6 +308,7 @@ void handle_config3(int is_zamboni) {
 	turn_around();
 
 	// train 15->1->2 (back home)
+	wm_print(window_id, "Train 15->1->2.\n");
 	change_train_speed('4');
 	sleep(25);
 	while (retrieve_contact("15")) {}
@@ -304,6 +323,7 @@ void handle_config3(int is_zamboni) {
 // if with zamboni, is_zamboni is 1
 void handle_config4(int is_zamboni) {
 	// train 5->6->7->9->12->15 (wagon picked up)
+	wm_print(window_id, "Train 5->6->7->9->12->15.\n");
 	while (retrieve_contact("6")) {}
 	change_train_speed('5');
 	change_switch('5', 'R');
@@ -318,8 +338,10 @@ void handle_config4(int is_zamboni) {
 	// train 15->1->2->6
 	// if with zamboni, wait until zamboni 7->6, then move train
 	if (is_zamboni) {
+		wm_print(window_id, "Waiting until zamboni 7->6.\n");
 		while (!retrieve_contact("6")) {}
 	}
+	wm_print(window_id, "Train 15->1->2->6.\n");
 	change_train_speed('5');
 	sleep(15);
 	while (retrieve_contact("15")) {}
@@ -330,6 +352,7 @@ void handle_config4(int is_zamboni) {
 	turn_around();
 
 	// train 6->5 (back home)
+	wm_print(window_id, "Train 6->5.\n");
 	change_switch('4', 'R');
 	change_train_speed('4');
 	while (!retrieve_contact("5")) {}

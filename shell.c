@@ -320,6 +320,8 @@ void execute_command(int window_id, char* cmd, char commands[][MAX_LEN]) {
 				start_pong();
 			} else if (compare_string(token, "shell")) {
 				start_shell();
+			} else if (compare_string(token, "train")) {
+				init_train();
 			} else if (token[0] != 0) {
 				wm_print(window_id, "Command not found!\n");
 			}
