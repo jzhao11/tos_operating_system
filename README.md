@@ -1,3 +1,3 @@
-# tos_shell
-shell built on tos os
-train application built on tos os
+# TrainOS (TOS) Operating System
+# Author: Jianfei Zhao
+# Email: christianz0991@gmail.com
